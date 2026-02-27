@@ -3,9 +3,15 @@ import streamlit as st
 import hashlib
 import sqlite3
 import os
+from dotenv import load_dotenv
 import datetime
 import shutil
+import requests
+from datetime import date
+import json
 
+#cargamos al inicio de todo la configuracion y habilitacion de los environments
+load_dotenv()
 
 def init_db():
     conn = sqlite3.connect("gestion_pdfs.db")
@@ -35,9 +41,31 @@ def guardar_db(hash,fecha,content):
     conn.commit()
     conn.close()
 
+
 def extract():
 
-    
+    #seteamos fecha para su posterior guardado en monday
+    hoy = date.today()
+    fecha_string = hoy.strftime("%Y-%m-%d")
+
+    #configuramos apiKey para la conexion con monday
+    api_key_monday = os.getenv("MONDAY_API_KEY")
+
+
+    #config de la query para guardar en monday(usa graphql)
+    query5 = 'mutation ($myItemName: String!, $columnVals: JSON!) {create_item (board_id:18396349357, item_name: $myItemName, column_values: $columnVals) {id}}'
+
+    #aca declaramos las variables y los campos de cada columna
+    query_original = {
+    'myItemName': 'Prueba python-monday',
+    'columnVals': json.dumps({
+        #resumen
+        "long_text_mkzsc82j": {"text": texto_completo}, #etiqueta "resumen"
+        "long_text_mkzsdhdf": {"text": "aca resumimos lo que traiga gemini"}, #etiqueta "respuesta sugerida"
+        "date_mkzs9ak3": {"date": fecha_string}, #etiqueta "vencimiento"
+        "color_mkzsgtnd": {"label": "SI"} #etiqueta si/no "procesado IA"
+    })
+}
 
     #config de streamlit
     st.set_page_config(page_title="extraccion epre", layout="centered")
@@ -102,67 +130,4 @@ def extract():
 
 
 
-# #primero, eliminamos los espacios en los nombres de los pdf
-# def remove_space_from_pdfs_names(path):
-#     for filename in os.listdir(path):
-#         #chequeamos si el archivo es un pdf y si contiene espacios
-#         if filename.endswith(".pdf") and " " in filename:
-#             #creamos un nuevo filename separando los espacios
-#             new_filename = filename.replace(" ", "") #los espacios por sin espacio
 
-#             #construimos la ruta vieja de los nombres por los nuevos cambios
-#             old_path = os.path.join(path, filename)#original con espacios
-#             new_path = os.path.join(path, new_filename) #sin espacios
-
-#             try:
-#                 #creamos un objeto reader de pdf
-#                 reader = PdfReader(f"{path}/Nota Ext 976227- Inf s-EXPTE 31241-21 Registradores Barrio Rio Sol - Las Perlas.pdf")
-
-#                 #imprimimos el numero de paginas
-#                 print(len(reader.pages))
-
-#                 #obtenemos una pagina en especifico, es la primera
-#                 page = reader.pages[0]
-
-#                 #extraemos
-#                 text = page.extract_text()
-#                 if text:
-#                     #si el texto se extrajo de manera correcta, abrimos conexion con la db
-#                     conn = sqlite3.connect("gestion_pdfs.db")
-#                     cursor = conn.cursor()
-
-#                     #ahora hasheamos el contenido extraido
-
-#                     #lo convertimos a utf-8
-#                     datos_bytes = text.encode('utf-8')
-
-#                     #creamos el hash objeto
-#                     sha1_hash = hashlib.sha1()
-
-#                     #actualizamos con los datos
-#                     sha1_hash.update(datos_bytes)
-
-#                     #obtenemos el resultado en hexadecimal, que este dato es el vamos a guardar
-#                     resultado_hash = sha1_hash.hexdigest()
-
-#                     #configuramos el timestamp now
-#                     fecha_creacion = datetime.datetime.now()
-
-#                     #y ahora almacenamos nuestros datos
-#                     cursor.execute(
-#                         "INSERT INTO archivos (hash, timestamp, contenido) VALUES (?,?,?)", (resultado_hash, fecha_creacion, text)
-#                     )
-#                     #cerramos conexion y almacenamos
-#                     conn.commit()
-
-#                     print(text)
-
-#                     os.rename(old_path, new_path)
-#                     print("renamed success")
-#             except OSError as e:
-#                 print(f"error en la conversion: {e}")
-#             finally:
-#                 conn.close()
-                
-
-# remove_space_from_pdfs_names('files')
