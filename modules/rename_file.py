@@ -29,6 +29,7 @@ def init_db():
     )
     conn.commit()
     conn.close()
+#hola
 
 def guardar_db(hash,fecha,content):
     conn = sqlite3.connect("gestion_pdfs.db")

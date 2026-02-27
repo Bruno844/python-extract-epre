@@ -3,4 +3,4 @@
 /env_extract
 gestion_pdfs.db
 .env
-/main-api-monday.py
+main-api-monday.py
