@@ -2,5 +2,5 @@
 /files
 /env_extract
 gestion_pdfs.db
-.env
+./env
 main-api-monday.py
